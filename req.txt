@@ -1,0 +1,16 @@
+argparse==1.1
+numpy
+pandas
+Biopython
+gcsfs
+regex
+future
+openpyxl
+
+#io
+#os
+#from subprocess import run, PIPE, STDOUT, Popen, check_output
+#subprocess
+#re
+#import /src/functions.py
+#import /src/helpers.py 
