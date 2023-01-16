@@ -8,15 +8,17 @@ import gcsfs
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+import numpy as np
 
 
 def bmt_simulation_discordances(donor_vcf, host_vcf, host_sex, donor_sex, tissue, gvhd): 
 
 	donor_annotations, numbers_dict = functions.process_annotations(donor_vcf, 'donor')
 	host_annotations, host_dict = functions.process_annotations(host_vcf, 'host')
+
 	numbers_dict.update(host_dict)
-	# print(donor_annotations.shape)
-	# print(host_annotations.shape)
+	print(donor_annotations.shape)
+	print(host_annotations.shape)
 
 	# storing the count for log entry
 	donor_annotations_process_annotations = donor_annotations
@@ -59,7 +61,7 @@ def bmt_simulation_discordances(donor_vcf, host_vcf, host_sex, donor_sex, tissue
 	# print('Number of rows after merging donor and host mutations: %i \n' %merged.shape[0])
 	# print('\n AFTER MERGING')
 	# print("\nNumber of rows after merging donor and host mutations: %i" %(merged.shape[0]))
-	# print(merged.shape)
+	print(merged.shape)
 
 	mutcount_cols = ['hugoSymbol','CHROM','start','end','refAllele','tumorSeqAllele1','tumorSeqAllele2']
 	nmuts = merged[mutcount_cols].drop_duplicates()
@@ -82,9 +84,9 @@ def bmt_simulation_discordances(donor_vcf, host_vcf, host_sex, donor_sex, tissue
 	discordances = functions.do_bmt(discordances=merged)
 	print('\n -------- DOING BMT SIMULATION --------')
 	print('Number of rows in dataframe after bmt simulation: %i \n' %discordances.shape[0])
+
 	# discordances.to_csv('discordances_after_bmt_simulation.txt', sep='\t', index=False)
 	print("\nNumber of rows discordances after bmt simulation: %i" %(discordances.shape[0]))
-	
 	nmuts = discordances[mutcount_cols].drop_duplicates()
 	print("Number of mutations after bmt simulation: %i" %(nmuts.shape[0]))
 	numbers_dict['Number of mutations after BMT simulation'] = nmuts.shape[0]
@@ -106,8 +108,9 @@ def bmt_simulation_discordances(donor_vcf, host_vcf, host_sex, donor_sex, tissue
 	discordances = discordances.assign(transid=discordances.annotationTranscript+':'+discordances.proteinChange)
 	discordances.to_csv('all_discordances.txt', sep='\t', index=False) 
 
-	# for printing
+	# for printing purpose
 	all_discordances = discordances
+	all_discordances["start"] = all_discordances["start"].astype(int)
 	all_discs_variant_classification = all_discordances["variantType"].value_counts()
 
 	# GvHD 
@@ -133,7 +136,16 @@ def bmt_simulation_discordances(donor_vcf, host_vcf, host_sex, donor_sex, tissue
 		'tumorSeqAllele2','variantType', 'annotationTranscript','transid','host_sequence', 'donor_sequence','proteinChange', 'seq_mut_pos', 'pep','ref_pep','pep_length','peptide_fasta_id']]
 		discordances_gvhd_variantType = discordances_gvhd[["hugoSymbol", "variantType"]].drop_duplicates()
 		discordances_gvhd_variantType = discordances_gvhd_variantType["variantType"].value_counts()
+		discordances_gvhd["start"] = discordances_gvhd["start"].astype(int)
 		discordances_gvhd.to_csv('GvHD_specific_discordances.txt', sep='\t', index=False)
+
+		final_dict_gvhd = {"GvHD_variants_tot_num":[discordances_gvhd_variantType.to_dict()], 
+		"GvHD_variants_genes":len(set(discordances_gvhd.hugoSymbol)), "GvHD_peptides":len(set(discordances_gvhd.pep))}
+		final_dict_df_gvhd = pd.DataFrame(final_dict_gvhd, index=[0])
+		final_dict_df_gvhd.to_csv("GvHD_dict_nums.csv", sep=",", index=False)
+	
+	if gvhd == "no":
+		print("GvHD run not selected!")
 
 	# GvL 
 	print('\n -------- SELECTING DISCORDANCES IN TISSUE OF INTEREST ---------\n')
@@ -184,6 +196,7 @@ def bmt_simulation_discordances(donor_vcf, host_vcf, host_sex, donor_sex, tissue
 
 	
 	discordances.to_csv(param_dict['tissue']+'_specific_discordances.txt', sep='\t', index=False)
+	print(numbers_dict) # CAN BE REMOVED - JUST FOR TESTING
 	peps_discordances = discordances # just for priting purpose 
 
 	final_dict_gvl = {"Host_sex":host_sex, "Donor_sex":donor_sex, 
@@ -194,12 +207,31 @@ def bmt_simulation_discordances(donor_vcf, host_vcf, host_sex, donor_sex, tissue
 	final_dict_df_gvl = pd.DataFrame(final_dict_gvl, index=[0])
 	final_dict_df_gvl.to_csv("GvL_dict_nums.csv", sep=",", index=False)
 
-	final_dict_gvhd = {"GvHD_variants_tot_num":[discordances_gvhd_variantType.to_dict()], 
-	"GvHD_variants_genes":len(set(discordances_gvhd.hugoSymbol)), "GvHD_peptides":len(set(discordances_gvhd.pep))}
-	final_dict_df_gvhd = pd.DataFrame(final_dict_gvhd, index=[0])
-	final_dict_df_gvhd.to_csv("GvHD_dict_nums.csv", sep=",", index=False)
+	# Known minors check
+	known_minors_file = pd.read_csv("gs://mhags-data/known_minors_hg19coords_peptide.txt", sep = "\t")
 
+	# Donor Funcotator	
+	temp = pd.merge(donor_annotations_process_annotations, known_minors_file, left_on=["POS", "REF", "ALT"], right_on=["hg19_coord", "ref", "alt"])
+	known_minors_file["donor_funcotator"] = known_minors_file.hg19_coord.apply(lambda x: int(x in list(temp["POS"])))
+
+	# Host Funcotator
+	temp = pd.merge(host_annotations_process_annotations, known_minors_file, left_on=["POS", "REF", "ALT"], right_on=["hg19_coord", "ref", "alt"])
+	known_minors_file["host_funcotator"] = known_minors_file.hg19_coord.apply(lambda x: int(x in list(temp["POS"])))
+
+	# BMT simulation
+	temp = pd.merge(all_discordances, known_minors_file, left_on=["start", "host_REF", "host_ALT"], right_on=["hg19_coord", "ref", "alt"])
+	known_minors_file["bmt_known_minors"] = known_minors_file.hg19_coord.apply(lambda x: int(x in list(temp["start"])))
+
+	# GvHD Tissue Expression
+	if gvhd == "yes":
+		temp = pd.merge(discordances_gvhd, known_minors_file, left_on=["start", "host_REF", "host_ALT"], right_on=["hg19_coord", "ref", "alt"])
+		known_minors_file["gvhd_known_minors"] = known_minors_file.hg19_coord.apply(lambda x: int(x in list(temp["start"])))
 	
+		known_minors_file.to_csv("known_minors_info.csv", index = False)
+
+	if gvhd == "no":
+		known_minors_file.to_csv("known_minors_info.csv", index = False)
+
 def main():
 	func_annotations = bmt_simulation_discordances(donor_vcf = donor_vcf, host_vcf = host_vcf, host_sex = host_sex, donor_sex = donor_sex, tissue = tissue, gvhd = gvhd) ### to do::: update the changed function name here 
 
@@ -217,9 +249,11 @@ if __name__ == '__main__':
 	parser.add_argument('-tissue', default='AML', help='either AML, BLOOD, CML, CLL, SKIN, LUNG, COLON, default AML', type=str)
 	parser.add_argument('-host_sex', default='Female', help='Male/male/M/m/ or Female/female/F/f', type=str)
 	parser.add_argument('-donor_sex', default='Female', help='Male/male/M/m or Female/female/F/f', type=str)
-	parser.add_argument("-gvhd", default = "yes", help = "To apply gvhd filters or not: only apply for AML, CML, CLL samples", type=str)
 	parser.add_argument('-use_patient_genes', default='yes', help='whether or not to use genes highly expressed in patient in the output', type=str)
 	parser.add_argument('-just_gene_set', default='no', help='whether or not to just consider the gene set specified', type=str)
+
+	#parser.add_argument("-summary_file")
+	parser.add_argument("-gvhd", default = "yes", help = "To apply gvhd filters or not: only apply for AML, CML, CLL samples", type=str)
 
 	args = parser.parse_args()
 	param_dict['host_vcf'] = args.host_vcf
@@ -254,6 +288,7 @@ if __name__ == '__main__':
 	donor_sex = args.donor_sex
 	host_sex = args.host_sex
 	tissue = args.tissue
+	#summary_file=args.summary_file
 	gvhd = args.gvhd
 
 	main()
