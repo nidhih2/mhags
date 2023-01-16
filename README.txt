@@ -63,15 +63,15 @@ A. peptides_for_blast.fa (FASTA file for GvHD output)
 3Ab MAKEBLASTDB AND BLASTP
 
 # HOST GvL
-3Ac.  python3 mhags-pipeline/blast_postprocessing.py -specific_discordances /discordances/from/3Aa -blastp_result /after/makeblastdb/and/blastp/after/donor/blastp_result.csv -sample host_basename -sample_type "host" -condition GvL
+3Ac.  python3 mhags-pipeline/blast_postprocessing.py -specific_discordances /discordances/from/3Aa -blastp_result /after/makeblastdb/and/blastp/after/donor/blastp_result.csv -sample host_basename -sample_type "host" -condition GvL -known_minors /bmt/known_minors
 
 # DONOR GvHD
-3Ba.  python3 mhags-pipeline/blast_postprocessing.py -specific_discordances /for/GvHD/GvHD_specific_discordances.txt -blastp_result /after/makeblastdb/and/blastp/blastp_result.csv -sample donor_basename -sample_type "donor" -condition GvL
+3Ba.  python3 mhags-pipeline/blast_postprocessing.py -specific_discordances /for/GvHD/GvHD_specific_discordances.txt -blastp_result /after/makeblastdb/and/blastp/blastp_result.csv -sample donor_basename -sample_type "donor" -condition GvL -known_minors /bmt/known_minors
 
 3Bb MAKEBLASTDB AND BLASTP
 
 # HOST GvHD
-3Bc  python3 mhags-pipeline/blast_postprocessing.py -specific_discordances /discordances/from/3Ba -blastp_result /after/makeblastdb/and/blastp/after/donor/blastp_result.csv -sample host_basename -sample_type "host" -condition GvL
+3Bc  python3 mhags-pipeline/blast_postprocessing.py -specific_discordances /discordances/from/3Ba -blastp_result /after/makeblastdb/and/blastp/after/donor/blastp_result.csv -sample host_basename -sample_type "host" -condition GvL -known_minors /bmt/known_minors
 
 4. 
 4A  python3 mhags-pipeline/HLAthena_preprocessing.py -discordances_after_blast /discordances/from/3Ac -autosomal "True"
@@ -82,7 +82,7 @@ A. peptides_for_blast.fa (FASTA file for GvHD output)
 6. 
 6A  python3 mhags-pipeline/HLAthena_postprocessing.py -sample_predictions /HLAthena/output/sample_predictions -discordances_after_blast /discordances/output/from/3Ac/for/GvL
 
-6B  python3 mhags-pipeline/HLAthena_postprocessing.py -sample_predictions /HLAthena/output/sample_predictions -discordances_after_blast /discordances/output/from/3Bc/for/GvHD
+6B  python3 mhags-pipeline/HLAthena_postprocessing.py -sample_predictions /HLAthena/output/sample_predictions -discordances_after_blast /discordances/output/from/3Bc/for/GvHD 
 
 FINAL OUTPUTS: 
 A. GvL HLAthena postprocessing binding putative minors antigens (text file)
@@ -91,7 +91,7 @@ B. GvHD HLAthena postprocessing binding putative minors antigens (text file)
 #####################
 
 1000g:
-1. 1000g_mhags WDL and JSON : Runs conversion of samples from hg38 to hg19, doesn;r incoude GvHD runs (only GvL) and includes info on known minors. 
+1. 1000g_mhags WDL and JSON : Runs conversion of samples from hg38 to hg19, doesn't include GvHD runs (only GvL) and includes info on known minors. 
   1. Docker used : nidhihookeri/1000g_mhags:latest
   2. Suucessful test case : https://app.terra.bio/#workspaces/broad-firecloud-wuclonal/CLL_NC/job_history/39e15cd6-2d84-4eb3-93f1-1fd91c1c26c4
 
