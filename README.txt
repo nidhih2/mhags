@@ -28,6 +28,9 @@ The pipeline takes as input Donor and Patient WES samples, Sex, Patient HLA typi
 6. Final WDL: mhags-pipeline-work/WDL/mhags_pipeline.15.wdl
 7. Associated inputs JSON:  mhags-pipeline-work/WDL/mhags_pipeline.15.json
 
+1. Final WDL with info on known minors : 
+2. Associated JSON : 
+
 # ORDER OF RUN (IF LOCALLY): 
 1. bmt-simulation.py (includes as child files: functions.py, helpers.py, translation_helpers.py)
 2. blast_preprocessing.py
@@ -85,5 +88,10 @@ FINAL OUTPUTS:
 A. GvL HLAthena postprocessing binding putative minors antigens (text file)
 B. GvHD HLAthena postprocessing binding putative minors antigens (text file)
 
+#####################
 
+1000g:
+1. 1000g_mhags WDL and JSON : Runs conversion of samples from hg38 to hg19, doesn;r incoude GvHD runs (only GvL) and includes info on known minors. 
+  1. Docker used : nidhihookeri/1000g_mhags:latest
+  2. Suucessful test case : https://app.terra.bio/#workspaces/broad-firecloud-wuclonal/CLL_NC/job_history/39e15cd6-2d84-4eb3-93f1-1fd91c1c26c4
 
