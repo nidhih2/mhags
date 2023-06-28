@@ -148,16 +148,19 @@ def get_gene_set(tissue, sex):
 	@return: a list of genes
 
 	"""
-
+	print(sex)
+	print("+++++++++++++++++++++")
 	if tissue == 'AML':
 
-		if sex == 'M' or "Male":
+		if sex in ['M', "Male"]:
 			beat_male = pd.read_csv('gs://mhags-data/tissue-specific-gene-sets/FINAL_beat_aml_specific_genes_male_20210623.txt', sep='\t') # file 1 - GvL_final/AML/Filter gene set/
-			genes = list(beat_male['symbol'])
+			genes = list(set(beat_male['symbol']))
 			
-		elif sex == 'F' or "Female":
-			beat_female = pd.read_csv('gs://mhags-data/tissue-specific-gene-sets/FINAL_beat_aml_specific_genes_female_20210623.txt', sep='\t') # file 2 - GvL_final/AML/Filter gene set/
-			genes = list(beat_female['symbol'])
+		elif sex in ['F', "Female"]:
+			# beat_female = pd.read_csv('gs://mhags-data/tissue-specific-gene-sets/FINAL_beat_aml_specific_genes_female_20210623.txt', sep='\t') # file 2 - GvL_final/AML/Filter gene set/
+			print("This patient is female")
+			beat_female = pd.read_csv('~/Desktop/beat_aml_nidhi_copy.txt', sep='\t')
+			genes = list(set(beat_female['symbol']))
 
 		elif sex == 'unknown':			
 			beat_female = pd.read_csv('gs://mhags-data/tissue-specific-gene-sets/FINAL_beat_aml_specific_genes_female_20210623.txt', sep='\t') # GvL_final/AML/Filter gene set/ - REPEAT AS FILE 2
@@ -167,10 +170,10 @@ def get_gene_set(tissue, sex):
 			print('Check the sex entry of donor/recipient : Invalid sex entry')
 
 	elif tissue == "CLL":
-		if sex == "M" or "Male":
+		if sex in ['M', "Male"]:
 			cll_male = pd.read_csv("gs://mhags-data/tissue-specific-gene-sets/FINAL_cll_bulk_sc_specific_genes_male_20210629.txt", sep="\t")
 			genes = list(cll_male["symbol"])
-		elif sex == "F" or "Female":
+		elif sex in ['F', "Female"]:
 			cll_female = pd.read_csv("gs://mhags-data/tissue-specific-gene-sets/FINAL_cll_bulk_sc_specific_genes_female_20210629.txt", sep="\t")
 			genes = list(cll_female["symbol"])
 		elif sex == "unknown":
@@ -181,13 +184,13 @@ def get_gene_set(tissue, sex):
 			print("Check the sex entry of donor/recipient : Invalid sex entry")
 
 	elif tissue == "CML":
-		if sex == "M" or "Male":
+		if sex in ['M', "Male"]:
 			cml_male = pd.read_csv("gs://mhags-data/tissue-specific-gene-sets/male_bulk_sc_combined_genes_20210623.txt", sep="\t")
 			genes = list(cml_male["symbol"])
-		elif sex == "F" or "Female":
+		elif sex in ['F', "Female"]:
 			cml_female = pd.read_csv("gs://mhags-data/tissue-specific-gene-sets/female_bulk_sc_combined_genes_20210623.txt", sep="\t")
 			genes = list(cml_female["symbol"])
-		elif sex =="unknown":
+		elif sex == "unknown":
 			cml_m_f = pd.read_csv("gs://mhags-data/tissue-specific-gene-sets/female_bulk_sc_combined_genes_20210623.txt", sep="\t")
 			genes = list(cml_m_f["symbol"])
 		else:
@@ -208,10 +211,10 @@ def load_blood_genes(sex):
 
 	"""
 
-	if sex == 'M' or "Male":
+	if sex in ['M', "Male"]:
 		hemato_male = pd.read_csv('gs://mhags-data/tissue-specific-gene-sets/FINAL_hemato_male_filter.txt', sep='\t') # file 1 - GvL_final/Hematopoietic Filter/ - SAME AS FILE 9 
 		genes = list(hemato_male['gene_short_name'])
-	elif sex == 'F' or "Female":
+	elif sex in ['F', "Female"]:
 		hemato_female = pd.read_csv('gs://mhags-data/tissue-specific-gene-sets/FINAL_hemato_female_filter.txt', sep='\t') # file 2 - GvL_final/Hematopoietic Filter/ - SAME AS FILE 10
 		genes = list(hemato_female['gene_short_name'])
 	elif sex == 'unknown':			
@@ -242,10 +245,10 @@ def select_patient_genes(tpms, host_sex):
 	gprot_male_low = pd.read_csv('gtex_prot_male_ts2.5.txt', sep='\t') # FILE 4 - gtex_summary_files/
 	
 	# ts_all = pd.read_csv('')
-	if host_sex == 'M':
+	if host_sex in ['M', "Male"]:
 		ts_low_genes = set(gprot_male_low['hgnc_symbol'])
 		rna_low_genes = set(gtex_male_low['Description'])
-	elif host_sex == 'F':
+	elif host_sex in ['F', "Female"]:
 		ts_low_genes = set(gprot_fem_low['hgnc_symbol'])
 		rna_low_genes = set(gtex_fem_low['Description'])
 	else:
