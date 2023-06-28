@@ -1599,7 +1599,7 @@ task bmt {
         }
 
         runtime {
-                docker : "nidhihookeri/minors-pipeline-2"
+                docker : "liangli92/bmt_v1.5"
                 cpu: 32
         }
         output {
